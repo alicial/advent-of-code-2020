@@ -4,17 +4,34 @@ end
 class Circle
   attr_accessor :cups, :current
 
-  def initialize(arr)
-    node = nil
+  def initialize(arr, part2 = false)
+    @max = arr.max
+    @min = arr.min
+
     @cups = {}
+    node = nil
+
+    if part2
+      n = @max
+      @max = 1_000_000
+      i = @max
+      while i > n
+        node = Cup.new(i, node)
+        @cups[i] = node
+        i -= 1
+      end
+    end
+
     arr.reverse.each do |i|
       node = Cup.new(i, node)
       @cups[i] = node
     end
-    @max = arr.max
-    @min = arr.min
 
-    @cups[arr.last].next = node
+    if part2
+      @cups[@max].next = node
+    else
+      @cups[arr.last].next = node
+    end
     @current = node
   end
 
@@ -56,8 +73,16 @@ end
 input = '487912365'
 arr = input.split('').map(&:to_i)
 
+# Part 1
 circle = Circle.new(arr)
 circle.move(100)
 
 node = circle.cups[1]
 puts (arr.size - 1).times.map { node = node.next; node.val }.join('')
+
+# Part 2
+circle = Circle.new(arr, true)
+circle.move(10_000_000)
+
+cup = circle.cups[1].next
+puts cup.val * cup.next.val
