@@ -1,6 +1,8 @@
+require 'set'
+
 class Board
   def initialize
-    @black = {}
+    @black = Set.new
   end
 
   def parse(str)
@@ -8,10 +10,10 @@ class Board
     str.scan(/se|ne|e|sw|nw|w/).each do |dir|
       coord = neighbor(coord, dir)
     end
-    if @black.key?(coord)
+    if @black.include?(coord)
       @black.delete(coord)
     else
-      @black[coord] = true
+      @black.add(coord)
     end
   end
 
@@ -39,12 +41,38 @@ class Board
   def count_black
     @black.size
   end
+
+  def flip
+    white_tiles = Set.new
+    flip_to_white = @black.filter do |coord|
+      neighbors = neighbor_coordinates(coord)
+      black, white = neighbors.partition { |nc| @black.include?(nc) }
+      white_tiles.merge(white)
+      black.empty? || black.size > 2
+    end
+    flip_to_black = white_tiles.filter do |coord|
+      neighbors = neighbor_coordinates(coord)
+      black, = neighbors.partition { |nc| @black.include?(nc) }
+      black.size == 2
+    end
+    flip_to_white.each { |coord| @black.delete(coord) }
+    @black.merge(flip_to_black)
+  end
+
+  def neighbor_coordinates(coord)
+    %w[se ne e sw nw w].map { |dir| neighbor(coord, dir) }
+  end
 end
 
-input = File.readlines('sample.txt').map(&:chomp).freeze
+input = File.readlines('input.txt').map(&:chomp).freeze
 
 board = Board.new
 
 input.each { |line| board.parse(line) }
 
+# Day 1
+puts board.count_black
+
+# Day 2
+100.times { board.flip }
 puts board.count_black
